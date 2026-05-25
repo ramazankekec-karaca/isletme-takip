@@ -93,7 +93,7 @@ router.post('/ogrenci-degerlendirme', async (req, res) => {
     
     // Python script'ini çalıştır
     const { exec } = require('child_process');
-    const komut = `python "${pyScript}" degerlendirme ${dataBase64} "${outputDir}"`;
+    const komut = `python3 "${pyScript}" degerlendirme ${dataBase64} "${outputDir}"`;
     
     exec(komut, (error, stdout, stderr) => {
       if (error) {
@@ -169,7 +169,7 @@ router.post('/ogretmen-raporu', async (req, res) => {
     const pyScript = path.join(__dirname, '../utils/generate_reports.py');
     
     const { exec } = require('child_process');
-    const komut = `python "${pyScript}" ogretmen ${dataBase64} "${outputDir}"`;
+    const komut = `python3 "${pyScript}" ogretmen ${dataBase64} "${outputDir}"`;
     
     exec(komut, (error, stdout, stderr) => {
       if (error) {

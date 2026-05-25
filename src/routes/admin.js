@@ -181,10 +181,10 @@ router.post('/sync-excel', adminMiddleware, upload.single('excelFile'), (req, re
   const filePath = req.file.path;
   
   // Script yolu
-  const scriptPath = path.join(__dirname, '../../../read_excel_sheets.py');
+  const scriptPath = path.join(__dirname, '../utils/read_excel_sheets.py');
 
   // Python script'ini çalıştır (argüman olarak dosya yolunu ver)
-  const pythonProcess = spawn('python', [scriptPath, filePath]);
+  const pythonProcess = spawn('python3', [scriptPath, filePath]);
 
   let stdoutData = '';
   let stderrData = '';
