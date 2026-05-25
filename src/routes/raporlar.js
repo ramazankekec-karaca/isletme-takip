@@ -12,7 +12,7 @@ const path = require('path');
 const fs = require('fs');
 const db = require('../database/db');
 const { authMiddleware } = require('../middleware/authMiddleware');
-const { olusturOgretmenRaporuWord, olusturDegerlendirmeWord } = require('../utils/generate_word');
+const { olusturOgretmenRaporuWord, olusturDegerlendirmeWord, olusturAyrilmaWord } = require('../utils/generate_word');
 
 router.use(authMiddleware);
 
@@ -235,7 +235,7 @@ router.post('/ayrilma-formu', async (req, res) => {
       const indirmeUrl = `/files/${path.basename(dosyaYolu)}`;
       return res.json({ message: 'PDF oluşturuldu', url: indirmeUrl, format: 'pdf' });
     } else if (format === 'word') {
-      const dosyaYolu = await olusturAyrilmaWord(ogrenci, dosyaAdi, ekBilgiler);
+      const dosyaYolu = await olusturAyrilmaWord(ogrenci, path.join(outputDir, `${dosyaAdi}.docx`), ekBilgiler);
       const indirmeUrl = `/files/${path.basename(dosyaYolu)}`;
       return res.json({ message: 'Word belgesi oluşturuldu', url: indirmeUrl, format: 'word' });
     }
@@ -554,9 +554,7 @@ function olusturZiyaretPDF(ogrenci, dosyaAdi, ekBilgiler) {
 
 
 
-function olusturAyrilmaWord(ogrenci, dosyaAdi, ekBilgiler) {
-  return olusturAyrilmaPDF(ogrenci, dosyaAdi + '_word', ekBilgiler);
-}
+
 
 function olusturZiyaretWord(ogrenci, dosyaAdi, ekBilgiler) {
   return olusturZiyaretPDF(ogrenci, dosyaAdi + '_word', ekBilgiler);

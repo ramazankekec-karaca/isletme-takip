@@ -231,9 +231,158 @@ function createRow(col1, col2, col3, isUnderline = false) {
   });
 }
 
+async function olusturAyrilmaWord(ogrenci, dosyaYolu, ekBilgiler) {
+  function formatTarih(tarihStr) {
+    if (!tarihStr) return '___/___/______';
+    const [yil, ay, gun] = tarihStr.split('-');
+    return `${gun}/${ay}/${yil}`;
+  }
+
+  const children = [];
+
+  children.push(
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      children: [
+        new TextRun({ text: "MESLEKİ EĞİTİM TAKİP SİSTEMİ", bold: true, size: 28, font: "Times New Roman" }),
+      ],
+    })
+  );
+  children.push(
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      children: [
+        new TextRun({ text: "İŞYERİNDEN AYRILMA FORMU (SÖZLEŞME FESİH)", bold: true, size: 24, font: "Times New Roman", underline: {} }),
+      ],
+      spacing: { after: 300 },
+    })
+  );
+
+  children.push(
+    new Paragraph({
+      children: [new TextRun({ text: "ÖĞRENCİ BİLGİLERİ", bold: true, size: 24, font: "Times New Roman", underline: {} })],
+      spacing: { after: 100 },
+    })
+  );
+
+  const ogrenciTable = new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    borders: {
+      top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE },
+      insideHorizontal: { style: BorderStyle.NONE }, insideVertical: { style: BorderStyle.NONE },
+    },
+    rows: [
+      createRow("Öğrenci No", ":", ogrenci.ogrenci_no || ""),
+      createRow("Adı Soyadı", ":", ogrenci.ad_soyad || ""),
+      createRow("Şube", ":", ogrenci.sube || ""),
+      createRow("Dal", ":", ogrenci.dal || ""),
+      createRow("Öğretmen", ":", ogrenci.ogretmen_adi || ""),
+      createRow("İşletme Adı", ":", ogrenci.isletme_adi || ""),
+      createRow("İşyeri Adresi", ":", ogrenci.isyeri_adresi || ""),
+      createRow("İşe Giriş Tarihi", ":", formatTarih(ogrenci.ise_giris_tarihi)),
+      createRow("Usta Öğretici", ":", ogrenci.usta_ogretici_adi || ""),
+    ],
+  });
+  
+  children.push(ogrenciTable);
+  children.push(new Paragraph({ text: "", spacing: { after: 300 } }));
+
+  children.push(
+    new Paragraph({
+      children: [new TextRun({ text: "AYRILMA BİLGİLERİ", bold: true, size: 24, font: "Times New Roman", underline: {} })],
+      spacing: { after: 100 },
+    })
+  );
+
+  children.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: "Ayrılma Tarihi: ", bold: true, size: 22, font: "Times New Roman" }),
+        new TextRun({ text: formatTarih(ekBilgiler?.ayrilma_tarihi), size: 22, font: "Times New Roman" }),
+      ],
+      spacing: { after: 100 }
+    })
+  );
+
+  children.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: "Ayrılma Nedeni: ", bold: true, size: 22, font: "Times New Roman" }),
+        new TextRun({ text: ekBilgiler?.ayrilma_nedeni || "....................................................................................", size: 22, font: "Times New Roman" }),
+      ],
+      spacing: { after: 100 }
+    })
+  );
+
+  children.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: "Ayrılma Şekli: ", bold: true, size: 22, font: "Times New Roman" }),
+        new TextRun({ text: "(  ) Kendi İsteği ile      (  ) İşveren Kararıyla      (  ) Diğer", size: 22, font: "Times New Roman" }),
+      ],
+      spacing: { after: 400 }
+    })
+  );
+
+  const imzaTable = new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    borders: {
+      top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE },
+      insideHorizontal: { style: BorderStyle.NONE }, insideVertical: { style: BorderStyle.NONE },
+    },
+    rows: [
+      new TableRow({
+        children: [
+          new TableCell({
+            width: { size: 50, type: WidthType.PERCENTAGE },
+            children: [
+              new Paragraph({ text: `Usta Öğreticinin`, font: "Times New Roman", size: 22, bold: true, spacing: { after: 50 } }),
+              new Paragraph({ text: `Adı Soyadı : ${ogrenci.usta_ogretici_adi || ".................."}`, font: "Times New Roman", size: 22, spacing: { after: 50 } }),
+              new Paragraph({ text: `İmza       :`, font: "Times New Roman", size: 22 }),
+            ]
+          }),
+          new TableCell({
+            width: { size: 50, type: WidthType.PERCENTAGE },
+            children: [
+              new Paragraph({ text: `Koordinatör Öğretmenin`, font: "Times New Roman", size: 22, bold: true, spacing: { after: 50 } }),
+              new Paragraph({ text: `Adı Soyadı : ${ogrenci.ogretmen_adi || ".................."}`, font: "Times New Roman", size: 22, spacing: { after: 50 } }),
+              new Paragraph({ text: `İmza       :`, font: "Times New Roman", size: 22 }),
+            ]
+          })
+        ]
+      })
+    ]
+  });
+  
+  children.push(imzaTable);
+
+  const doc = new Document({
+    sections: [
+      {
+        properties: {
+          page: {
+            margin: {
+              top: MARGIN_TWIPS,
+              bottom: MARGIN_TWIPS,
+              left: MARGIN_TWIPS,
+              right: MARGIN_TWIPS,
+            },
+          },
+        },
+        children: children,
+      },
+    ],
+  });
+
+  const buffer = await Packer.toBuffer(doc);
+  fs.writeFileSync(dosyaYolu, buffer);
+  return dosyaYolu;
+}
+
 module.exports = {
   olusturOgretmenRaporuWord,
-  olusturDegerlendirmeWord
+  olusturDegerlendirmeWord,
+  olusturAyrilmaWord
 };
 
 /**
