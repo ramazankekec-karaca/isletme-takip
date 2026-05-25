@@ -1,0 +1,220 @@
+AMD, 4 vCPUs, 15.62 GB RAM
+Using image "ubuntu-26.04-jdk-17-ndk-r27b" based on "ubuntu-2604-resolute-amd64-v20260505"
+Installed software:
+- NDK 27.1.12297006
+- Node.js 22.22.2
+- Bun 1.3.13
+- Yarn 1.22.22
+- pnpm 10.33.3
+- npm 10.9.4
+- Java 17
+- node-gyp 12.3.0
+- Maestro 2.5.1
+Project environment variables:
+  EAS_USE_CACHE=1
+  __API_SERVER_URL=https://api.expo.dev/
+Environment secrets:
+  EXPO_TOKEN=********
+EAS Build environment variables:
+  NVM_INC=/home/expo/.nvm/versions/node/v22.22.2/include/node
+  HOSTNAME=turtle-worker-8988b96b437d
+  JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+  WORKER_TARBALL_URL=https://storage.googleapis.com/eas-build-worker-tarballs/worker-android-production.tar.gz
+  PWD=/usr/local/eas-build-worker
+  HOME=/home/expo
+  ANDROID_NDK_HOME=/home/expo/Android/Sdk/ndk/27.1.12297006
+  NVM_DIR=/home/expo/.nvm
+  ANDROID_HOME=/home/expo/Android/Sdk
+  SHLVL=1
+  ANDROID_SDK_ROOT=/home/expo/Android/Sdk
+  PATH=/home/expo/workingdir/bin:/home/expo/.nvm/versions/node/v22.22.2/bin:/opt/bundletool:/home/expo/Android/Sdk/build-tools/36.0.0:/home/expo/Android/Sdk/ndk/27.1.12297006:/home/expo/Android/Sdk/cmdline-tools/tools/bin:/home/expo/Android/Sdk/tools:/home/expo/Android/Sdk/tools/bin:/home/expo/Android/Sdk/platform-tools:/home/expo/Android/Sdk/emulator:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/home/expo/.bun/bin
+  LOGGER_LEVEL=debug
+  NVM_BIN=/home/expo/.nvm/versions/node/v22.22.2/bin
+  EAS_BUILD_WORKER_DIR=/home/expo/eas-build-worker
+  OLDPWD=/home/expo
+  _=/home/expo/.nvm/versions/node/v22.22.2/bin/node
+  CI=1
+  MAESTRO_DRIVER_STARTUP_TIMEOUT=120000
+  MAESTRO_CLI_NO_ANALYTICS=1
+  EAS_BUILD=true
+  EAS_BUILD_RUNNER=eas-build
+  EAS_BUILD_PLATFORM=android
+  EAS_CLI_SENTRY_DSN=https://ca4734dc503543b28d55fdaf0563f61c@o30871.ingest.sentry.io/1837720
+  NVM_NODEJS_ORG_MIRROR=http://nodejs.production.caches.eas-build.internal
+  EAS_BUILD_PROFILE=preview
+  EAS_BUILD_GIT_COMMIT_HASH=4e645f5bb6a4c5d2bdddea91a4d44240e78b0819
+  EAS_BUILD_ID=b3b44f7e-7464-4b45-90ee-8988b96b437d
+  LANG=en_US.UTF-8
+  EAS_BUILD_WORKINGDIR=/home/expo/workingdir/build
+  EAS_BUILD_PROJECT_ID=f5c8bbdc-21d2-4fb7-b6db-e31237eaf2df
+  ANDROID_CCACHE=/usr/bin/ccache
+  EAS_BUILD_MAVEN_CACHE_URL=http://maven.production.caches.eas-build.internal
+  GRADLE_OPTS=-Dorg.gradle.jvmargs="-XX:MaxMetaspaceSize=1g -Xmx4g -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" -Dorg.gradle.parallel=true -Dorg.gradle.daemon=false
+  EAS_BUILD_USERNAME=matbaaakademi
+  __EAS_BUILD_ENVS_DIR=/home/expo/workingdir/env
+Builder is ready, starting build
+End phase: SPIN_UP_BUILDER
+Start phase: INSTALL_CUSTOM_TOOLS
+End phase: INSTALL_CUSTOM_TOOLS
+Start phase: PREPARE_PROJECT
+End phase: PREPARE_PROJECT
+Start phase: PRE_INSTALL_HOOK
+End phase: PRE_INSTALL_HOOK
+Start phase: READ_EAS_JSON
+Using eas.json:
+{
+  "cli": {
+    "version": ">= 7.6.1"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {}
+  },
+  "submit": {
+    "production": {}
+  }
+}
+
+End phase: READ_EAS_JSON
+Start phase: READ_PACKAGE_JSON
+Using package.json:
+{
+  "name": "mobile",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "@expo/metro-runtime": "~56.0.12",
+    "@expo/vector-icons": "^15.0.2",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-picker/picker": "2.11.4",
+    "@react-navigation/bottom-tabs": "^7.16.1",
+    "@react-navigation/native": "^7.2.4",
+    "@react-navigation/native-stack": "^7.15.1",
+    "expo": "~56.0.4",
+    "expo-file-system": "~56.0.7",
+    "expo-font": "~56.0.5",
+    "expo-sharing": "~56.0.13",
+    "expo-status-bar": "~56.0.4",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-gesture-handler": "~2.31.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "4.25.2",
+    "react-native-web": "^0.21.2"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web"
+  },
+  "private": true,
+  "devDependencies": {
+    "@expo/ngrok": "^4.1.3"
+  }
+}
+End phase: READ_PACKAGE_JSON
+Start phase: INSTALL_DEPENDENCIES
+Running "npm ci --include=dev" in /home/expo/workingdir/build directory
+npm warn deprecated uuid@3.4.0: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+npm warn deprecated uuid@7.0.3: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+added 560 packages, and audited 561 packages in 10s
+52 packages are looking for funding
+  run `npm fund` for details
+12 moderate severity vulnerabilities
+To address issues that do not require attention, run:
+  npm audit fix
+To address all issues possible (including breaking changes), run:
+  npm audit fix --force
+Some issues need review, and may require choosing
+a different dependency.
+Run `npm audit` for details.
+End phase: INSTALL_DEPENDENCIES
+Start phase: READ_APP_CONFIG
+Using app configuration:
+{
+  "owner": "matbaaakademi",
+  "name": "İşletme Takip",
+  "slug": "isletme-takip",
+  "version": "1.0.0",
+  "orientation": "portrait",
+  "icon": "./assets/icon.png",
+  "userInterfaceStyle": "dark",
+  "ios": {
+    "supportsTablet": true,
+    "bundleIdentifier": "com.isletme.takip",
+    "infoPlist": {
+      "NSPhotoLibraryAddUsageDescription": "Raporları fotoğraf galerinize kaydedebilmek için"
+    }
+  },
+  "android": {
+    "adaptiveIcon": {
+      "backgroundColor": "#0a192f",
+      "foregroundImage": "./assets/android-icon-foreground.png"
+    },
+    "package": "com.isletme.takip",
+    "permissions": [
+      "READ_EXTERNAL_STORAGE",
+      "WRITE_EXTERNAL_STORAGE",
+      "android.permission.READ_EXTERNAL_STORAGE",
+      "android.permission.WRITE_EXTERNAL_STORAGE",
+      "android.permission.INTERNET"
+    ]
+  },
+  "web": {
+    "favicon": "./assets/favicon.png"
+  },
+  "plugins": [
+    "expo-file-system",
+    "expo-sharing",
+    "expo-font"
+  ],
+  "extra": {
+    "eas": {
+      "projectId": "f5c8bbdc-21d2-4fb7-b6db-e31237eaf2df"
+    }
+  },
+  "sdkVersion": "56.0.0",
+  "platforms": [
+    "ios",
+    "android",
+    "web"
+  ]
+}
+End phase: READ_APP_CONFIG
+Start phase: RUN_EXPO_DOCTOR
+Running "expo doctor"
+Running 21 checks on your project...
+21/21 checks passed. No issues detected!
+End phase: RUN_EXPO_DOCTOR
+Start phase: PREBUILD
+- Creating native directory (./android)
+✔ Created native directory
+- Updating package.json
+✔ Updated package.json | no changes
+- Running prebuild
+» android: userInterfaceStyle: Install expo-system-ui in your project to enable this feature.
+- Running prebuild
+✔ Finished prebuild
+Running "npm install --include=dev" in /home/expo/workingdir/build directory
+up to date, audited 561 packages in 984ms
+52 packages are looking for funding
+  run `npm fund` for details
+12 moderate severity vulnerabilities
+To address issues that do not require attention, run:
+  npm audit fix
+To address all issues possible (including breaking changes), run:
+  npm audit fix --force
+Some issues need review, and may require choosing
+a different dependency.
+Run `npm audit` for details.

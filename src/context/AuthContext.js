@@ -31,8 +31,8 @@ export const AuthProvider = ({ children }) => {
     oturumuKontrolEt();
   }, []);
 
-  const girisYap = async (ogretmen_id, sifre) => {
-    const yanit = await authAPI.girisYap(ogretmen_id, sifre);
+  const girisYap = async (payload) => {
+    const yanit = await authAPI.girisYap(payload);
     await tokenSakla(yanit.token);
     await kullaniciBilgisiSakla(yanit.ogretmen);
     setKullanici(yanit.ogretmen);

@@ -4,10 +4,14 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// ⚠️ Kendi bilgisayarınızın IP adresi ile değiştirin!
-// Bunu öğrenmek için PowerShell'de: ipconfig → "IPv4 Address" satırı
-// Örnek: http://192.168.1.45:3000
-export const API_BASE_URL = 'http://192.168.1.100:3000';
+// ⚠️ Bilgisayarınızın yerel IP adresi (ipconfig komutuyla bulundu)
+// Telefon ve bilgisayar aynı Wi-Fi ağında olmalıdır!
+import { Platform } from 'react-native';
+
+// ⚠️ Web testleri için localhost, Mobil (APK) için bilgisayarın yerel IP adresi
+export const API_BASE_URL = Platform.OS === 'web' 
+  ? 'http://localhost:3000' 
+  : 'http://192.168.1.6:3000';
 
 const TOKEN_KEY = '@isletme_token';
 const USER_KEY = '@isletme_user';
@@ -68,10 +72,10 @@ export const authAPI = {
   ogretmenleriGetir: () => istekYap('/api/auth/ogretmenler'),
 
   // Giriş yap
-  girisYap: (ogretmen_id, sifre) =>
+  girisYap: (payload) =>
     istekYap('/api/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ ogretmen_id, sifre }),
+      body: JSON.stringify(payload),
     }),
 
   // Token doğrula
@@ -110,7 +114,40 @@ export const ogrenciAPI = {
       method: 'POST',
       body: JSON.stringify(veriler),
     }),
+
+  // Tüm veritabanında arama
+  globalArama: (metin, tip) => 
+    istekYap(`/api/ogrenciler/arama/tum?q=${encodeURIComponent(metin)}&tip=${tip}`),
 };
+
+// ─── ADMIN API ───────────────────────────────────────────────────────────────
+
+export const adminAPI = {
+  ogretmenler: () => istekYap('/api/admin/ogretmenler'),
+  ogretmenEkle: (veri) => istekYap('/api/admin/ogretmenler', { method: 'POST', body: JSON.stringify(veri) }),
+  ogretmenGuncelle: (id, veri) => istekYap(`/api/admin/ogretmenler/${id}`, { method: 'PUT', body: JSON.stringify(veri) }),
+  ogretmenleriTemizle: () => istekYap('/api/admin/ogretmenler/temizle', { method: 'DELETE' }),
+  
+  okullar: () => istekYap('/api/admin/okullar'),
+  okulEkle: (veri) => istekYap('/api/admin/okullar', { method: 'POST', body: JSON.stringify(veri) }),
+  okulGuncelle: (id, veri) => istekYap(`/api/admin/okullar/${id}`, { method: 'PUT', body: JSON.stringify(veri) }),
+  okulSil: (id) => istekYap(`/api/admin/okullar/${id}`, { method: 'DELETE' }),
+
+  syncExcel: async (formData) => {
+    const token = await tokenGetir();
+    const response = await fetch(`${API_BASE_URL}/api/admin/sync-excel`, {
+      method: 'POST',
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: formData,
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Excel yükleme hatası');
+    return data;
+  }
+};
+
 
 // ─── DEVAMSIZLIK API ──────────────────────────────────────────────────────────
 
@@ -141,16 +178,25 @@ export const devamsizlikAPI = {
 // ─── RAPOR API ────────────────────────────────────────────────────────────────
 
 export const raporAPI = {
-  ogrenciDegerlendirme: (ogrenci_id, format = 'pdf') =>
+  // Çoklu öğrenci değerlendirme
+  ogrenciDegerlendirme: (ogrenciler) => 
     istekYap('/api/raporlar/ogrenci-degerlendirme', {
       method: 'POST',
-      body: JSON.stringify({ ogrenci_id, format }),
+      body: JSON.stringify({ ogrenciler }),
+    }),
+    
+  ogretmenRaporu: (ogrenciler, format = 'pdf') =>
+    istekYap('/api/raporlar/ogretmen-raporu', {
+      method: 'POST',
+      body: JSON.stringify({ ogrenciler, format }),
     }),
 
-  ayrilmaFormu: (ogrenci_id, format = 'pdf', ekBilgiler = {}) =>
+  ayrilmaSablonu: () => istekYap('/api/raporlar/ayrilma-sablon'),
+
+  ayrilmaFormu: (ogrenci_id, format = 'pdf', ayrilmaTarihi, fesihGerekcesi) =>
     istekYap('/api/raporlar/ayrilma-formu', {
       method: 'POST',
-      body: JSON.stringify({ ogrenci_id, format, ...ekBilgiler }),
+      body: JSON.stringify({ ogrenci_id, format, ayrilmaTarihi, fesihGerekcesi }),
     }),
 
   ziyaretFormu: (ogrenci_id, format = 'pdf', ekBilgiler = {}) =>
@@ -159,3 +205,39 @@ export const raporAPI = {
       body: JSON.stringify({ ogrenci_id, format, ...ekBilgiler }),
     }),
 };
+
+// ─── PLAN API ─────────────────────────────────────────────────────────────────
+
+export const planAPI = {
+  listele: () => istekYap('/api/planlar'),
+
+  grupEkle: (grup_adi, ziyaret_tarihi) =>
+    istekYap('/api/planlar/grup', {
+      method: 'POST',
+      body: JSON.stringify({ grup_adi, ziyaret_tarihi }),
+    }),
+
+  grupSil: (id) =>
+    istekYap(`/api/planlar/grup/${id}`, {
+      method: 'DELETE',
+    }),
+
+  isletmeAta: (isletme_adi, hedef_grup_id = null) =>
+    istekYap('/api/planlar/ata', {
+      method: 'POST',
+      body: JSON.stringify({ isletme_adi, hedef_grup_id }),
+    }),
+
+  tarihKaydet: (isletmeler, ziyaret_tarihi) =>
+    istekYap('/api/planlar/ziyaret-tarihi-kaydet', {
+      method: 'POST',
+      body: JSON.stringify({ isletmeler, ziyaret_tarihi }),
+    }),
+
+  mapsLink: (isletmeler) =>
+    istekYap('/api/planlar/maps-link', {
+      method: 'POST',
+      body: JSON.stringify({ isletmeler }),
+    }),
+};
+

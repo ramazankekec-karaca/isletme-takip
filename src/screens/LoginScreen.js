@@ -9,19 +9,19 @@ import {
 } from 'react-native';
 import { authAPI } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { RENKLER, YAZI, BOSLUK, RADIUS, GOLGE } from '../theme';
 
 export default function LoginScreen() {
   const { girisYap } = useAuth();
 
-  const [ogretmenler, setOgretmenler] = useState([]);
-  const [seciliOgretmen, setSeciliOgretmen] = useState(null);
+  const [email, setEmail] = useState('');
   const [sifre, setSifre] = useState('');
   const [yukleniyor, setYukleniyor] = useState(false);
-  const [listYukleniyor, setListYukleniyor] = useState(true);
   const [hata, setHata] = useState('');
-  const [pickerAcik, setPickerAcik] = useState(false);
   const [sifreGoster, setSifreGoster] = useState(false);
+  const [yoneticiGirisi, setYoneticiGirisi] = useState(false);
+  const [kullaniciAdi, setKullaniciAdi] = useState('');
 
   // Animasyon değerleri
   const fadeAnim = new Animated.Value(0);
@@ -30,21 +30,25 @@ export default function LoginScreen() {
   useEffect(() => {
     // Giriş animasyonu
     Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 600, useNativeDriver: true }),
+      Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: false }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 600, useNativeDriver: false }),
     ]).start();
 
-    // Öğretmen listesini yükle
-    authAPI.ogretmenleriGetir()
-      .then(res => setOgretmenler(res.data))
-      .catch(() => setHata('Sunucuya bağlanılamadı. IP adresini kontrol edin.'))
-      .finally(() => setListYukleniyor(false));
+    // Eskiden liste yüklenen yer
+    // Artık sadece email ile giriş yapılıyor
   }, []);
 
   const girisYapHandler = async () => {
-    if (!seciliOgretmen) {
-      setHata('Lütfen öğretmeninizi seçin');
-      return;
+    if (yoneticiGirisi) {
+      if (!kullaniciAdi) {
+        setHata('Lütfen yönetici adını girin');
+        return;
+      }
+    } else {
+      if (!email) {
+        setHata('Lütfen e-posta adresinizi girin');
+        return;
+      }
     }
     if (!sifre) {
       setHata('Lütfen şifrenizi girin');
@@ -54,7 +58,10 @@ export default function LoginScreen() {
     setHata('');
     setYukleniyor(true);
     try {
-      await girisYap(seciliOgretmen.id, sifre);
+      const payload = yoneticiGirisi 
+        ? { ad_soyad: kullaniciAdi, sifre } 
+        : { email: email.trim(), sifre };
+      await girisYap(payload);
     } catch (err) {
       setHata(err.message || 'Giriş başarısız');
     } finally {
@@ -62,80 +69,64 @@ export default function LoginScreen() {
     }
   };
 
+  const IcerikSarmalayici = Platform.OS === 'web' ? View : KeyboardAvoidingView;
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={RENKLER.lacivert} />
       
-      <KeyboardAvoidingView
+      <IcerikSarmalayici
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flex}
       >
         <ScrollView
+          style={styles.flex}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
           {/* Logo & Başlık */}
-          <Animated.View
-            style={[styles.headerBlok, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}
-          >
+          <View style={styles.headerBlok}>
             <View style={styles.logoKutu}>
               <Text style={styles.logoEmoji}>🏫</Text>
             </View>
             <Text style={styles.baslik}>İşletme Takip</Text>
             <Text style={styles.altBaslik}>Mesleki Eğitim Yönetim Sistemi</Text>
-          </Animated.View>
+          </View>
 
           {/* Form Kartı */}
-          <Animated.View style={[styles.kart, { opacity: fadeAnim }]}>
+          <View style={styles.kart}>
             <Text style={styles.formBaslik}>Öğretmen Girişi</Text>
 
-            {/* Öğretmen Seçici */}
+            {/* Öğretmen Email veya Kullanıcı Adı Girdisi */}
             <View style={styles.inputGrup}>
-              <Text style={styles.etiket}>ÖĞRETMEN</Text>
-              <TouchableOpacity
-                style={[styles.picker, pickerAcik && styles.pickerAcik]}
-                onPress={() => setPickerAcik(!pickerAcik)}
-                activeOpacity={0.8}
-              >
-                <Text style={seciliOgretmen ? styles.pickerSecili : styles.pickerPlaceholder}>
-                  {seciliOgretmen ? seciliOgretmen.ad_soyad : 'Öğretmen seçin...'}
-                </Text>
-                <Text style={styles.pickerOk}>{pickerAcik ? '▲' : '▼'}</Text>
-              </TouchableOpacity>
-
-              {pickerAcik && (
-                <View style={styles.pickerListesi}>
-                  {listYukleniyor ? (
-                    <ActivityIndicator color={RENKLER.turuncu} style={{ padding: BOSLUK.md }} />
-                  ) : ogretmenler.length === 0 ? (
-                    <Text style={styles.listeBos}>Öğretmen bulunamadı</Text>
-                  ) : (
-                    ogretmenler.map((ogretmen) => (
-                      <TouchableOpacity
-                        key={ogretmen.id}
-                        style={[
-                          styles.pickerItem,
-                          seciliOgretmen?.id === ogretmen.id && styles.pickerItemSecili,
-                        ]}
-                        onPress={() => {
-                          setSeciliOgretmen(ogretmen);
-                          setPickerAcik(false);
-                          setHata('');
-                        }}
-                      >
-                        <Text style={[
-                          styles.pickerItemMetin,
-                          seciliOgretmen?.id === ogretmen.id && styles.pickerItemMetinSecili,
-                        ]}>
-                          {ogretmen.ad_soyad}
-                        </Text>
-                        {seciliOgretmen?.id === ogretmen.id && (
-                          <Text style={styles.checkIsaret}>✓</Text>
-                        )}
-                      </TouchableOpacity>
-                    ))
-                  )}
+              <Text style={styles.etiket}>{yoneticiGirisi ? 'KULLANICI ADI' : 'E-POSTA ADRESİ'}</Text>
+              
+              {yoneticiGirisi ? (
+                <View style={styles.sifreKutu}>
+                  <TextInput
+                    style={styles.sifreInput}
+                    placeholder="Örn: Yönetici"
+                    placeholderTextColor={RENKLER.metinGri}
+                    value={kullaniciAdi}
+                    onChangeText={(t) => { setKullaniciAdi(t); setHata(''); }}
+                    cursorColor={RENKLER.turuncu}
+                    selectionColor={RENKLER.turuncu}
+                  />
+                </View>
+              ) : (
+                <View style={styles.sifreKutu}>
+                  <TextInput
+                    style={styles.sifreInput}
+                    placeholder="E-posta adresiniz"
+                    placeholderTextColor={RENKLER.metinGri}
+                    value={email}
+                    onChangeText={(t) => { setEmail(t); setHata(''); }}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    cursorColor={RENKLER.turuncu}
+                    selectionColor={RENKLER.turuncu}
+                  />
                 </View>
               )}
             </View>
@@ -154,6 +145,8 @@ export default function LoginScreen() {
                   keyboardType="default"
                   returnKeyType="done"
                   onSubmitEditing={girisYapHandler}
+                  cursorColor={RENKLER.turuncu}
+                  selectionColor={RENKLER.turuncu}
                 />
                 <TouchableOpacity
                   onPress={() => setSifreGoster(!sifreGoster)}
@@ -184,14 +177,26 @@ export default function LoginScreen() {
                 <Text style={styles.girisBtnMetin}>GİRİŞ YAP</Text>
               )}
             </TouchableOpacity>
-          </Animated.View>
+          </View>
 
           {/* Alt bilgi */}
           <Text style={styles.altBilgi}>
             Şifrenizi unuttuysanız okul yöneticinizle iletişime geçin.
           </Text>
+
+          {/* Yönetici Toggle */}
+          <TouchableOpacity 
+            onPress={() => { setYoneticiGirisi(!yoneticiGirisi); setHata(''); }}
+            style={{ alignItems: 'center', marginTop: BOSLUK.lg }}
+          >
+            <Icon 
+              name={yoneticiGirisi ? 'account-tie' : 'shield-account'} 
+              size={32} 
+              color={RENKLER.turuncu} 
+            />
+          </TouchableOpacity>
         </ScrollView>
-      </KeyboardAvoidingView>
+      </IcerikSarmalayici>
     </View>
   );
 }
@@ -402,4 +407,12 @@ const styles = StyleSheet.create({
     marginTop: BOSLUK.xl,
     lineHeight: 18,
   },
+  yoneticiToggleMetin: {
+    color: RENKLER.turuncu,
+    fontSize: YAZI.sm,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: BOSLUK.lg,
+    textDecorationLine: 'underline',
+  }
 });
