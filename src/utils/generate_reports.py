@@ -9,12 +9,11 @@ def generate_report(template_type, data_json, output_dir):
     try:
         data = json.loads(data_json)
         
-        root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))
-        excel_files = [f for f in os.listdir(root_dir) if (f.endswith('.xlsm') or f.endswith('.xlsx')) and not f.startswith('~$')]
-        if not excel_files:
-            raise Exception("Excel file not found in root directory")
-            
-        file_path = os.path.join(root_dir, excel_files[0])
+        root_dir = os.path.dirname(__file__)
+        file_path = os.path.abspath(os.path.join(root_dir, '../assets/template.xlsm'))
+        
+        if not os.path.exists(file_path):
+            raise Exception(f"Excel template not found at {file_path}")
         
         # Load workbook with openpyxl
         wb = openpyxl.load_workbook(file_path, data_only=False, keep_vba=False)
