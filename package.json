@@ -1,0 +1,29 @@
+{
+  "name": "isletme-takip-backend",
+  "version": "1.0.0",
+  "description": "Mesleki Eğitim Takip Sistemi - Backend API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "seed": "node src/database/seed.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.10.0",
+    "cors": "^2.8.6",
+    "docx": "^9.6.1",
+    "docxtemplater": "^3.68.7",
+    "express": "^5.2.1",
+    "fs-extra": "^11.3.5",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.1.1",
+    "pdfkit": "^0.18.0",
+    "pizzip": "^3.2.0",
+    "xlsx": "^0.18.5"
+  }
+}
