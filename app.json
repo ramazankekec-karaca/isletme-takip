@@ -1,24 +1,49 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "owner": "matbaaakademi",
+    "name": "İşletme Takip",
+    "slug": "isletme-takip",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.isletme.takip",
+      "infoPlist": {
+        "NSPhotoLibraryAddUsageDescription": "Raporları fotoğraf galerinize kaydedebilmek için"
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+        "backgroundColor": "#0a192f",
+        "foregroundImage": "./assets/android-icon-foreground.png"
+      },
+      "package": "com.isletme.takip",
+      "permissions": [
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableProguardInReleaseBuilds": false,
+            "enableShrinkResourcesInReleaseBuilds": false
+          }
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "43a4c6be-48e8-4390-8711-b3e43178dbe5"
+      }
     }
   }
 }
