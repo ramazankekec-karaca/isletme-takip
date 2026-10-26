@@ -39,7 +39,22 @@ app.use('/api/raporlar', raporRoutes);
 app.use('/api/planlar', planlarRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Sağlık kontrolü
+// Ana sayfa & Sağlık kontrolü
+app.get('/', (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'İşletme Takip Sunucusu Başarıyla Çalışıyor 🚀',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      ogrenciler: '/api/ogrenciler',
+      raporlar: '/api/raporlar',
+      admin: '/api/admin'
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'ok', 
