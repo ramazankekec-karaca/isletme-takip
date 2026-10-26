@@ -43,6 +43,7 @@ app.use('/api/admin', adminRoutes);
 app.get('/', (req, res) => {
   res.json({
     status: 'ok',
+    version: '1.0.2-xlsx',
     message: 'İşletme Takip Sunucusu Başarıyla Çalışıyor 🚀',
     endpoints: {
       health: '/api/health',
