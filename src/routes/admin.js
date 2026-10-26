@@ -277,6 +277,5 @@ router.post('/sync-excel', adminMiddleware, upload.single('excelFile'), (req, re
     res.status(500).json({ error: 'Veri işleme hatası', details: err.message });
   }
 });
-});
 
 module.exports = router;
