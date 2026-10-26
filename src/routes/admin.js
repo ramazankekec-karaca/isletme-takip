@@ -170,7 +170,7 @@ router.delete('/okullar/:id', adminMiddleware, (req, res) => {
 
 /**
  * @route   POST /api/admin/sync-excel
- * @desc    Excel dosyasını yükler ve python okuma scriptini çalıştırır.
+ * @desc    Excel dosyasını yükler ve veritabanını günceller (Saf Node.js/XLSX).
  */
 router.post('/sync-excel', adminMiddleware, upload.single('excelFile'), (req, res) => {
   if (!req.file) {
@@ -179,127 +179,104 @@ router.post('/sync-excel', adminMiddleware, upload.single('excelFile'), (req, re
 
   // Yüklenen dosyanın yolu
   const filePath = req.file.path;
-  
-  // Script yolu
-  const scriptPath = path.join(__dirname, '../utils/read_excel_sheets.py');
 
-  // Python script'ini çalıştır (argüman olarak dosya yolunu ver)
-  const pythonProcess = spawn('python3', [scriptPath, filePath]);
+  try {
+    const { readExcelSheets } = require('../utils/read_excel_sheets');
+    const parsedData = readExcelSheets(filePath);
 
-  let stdoutData = '';
-  let stderrData = '';
-
-  pythonProcess.stdout.on('data', (data) => {
-    stdoutData += data.toString();
-  });
-
-  pythonProcess.stderr.on('data', (data) => {
-    stderrData += data.toString();
-  });
-
-  pythonProcess.on('close', (code) => {
-    try {
-      // Çıktının son satırında JSON olması beklenir
-      const jsonStart = stdoutData.indexOf('{');
-      if (jsonStart === -1) {
-        throw new Error("Python çıktısında JSON bulunamadı. Stderr: " + stderrData);
-      }
-      const jsonStr = stdoutData.substring(jsonStart);
-      const parsedData = JSON.parse(jsonStr);
-
-      if (parsedData.error) {
-        throw new Error(parsedData.error);
-      }
-
-      const { ogretmenler, ogrenciler } = parsedData;
-      let eklenecekOgretmenSayisi = 0;
-      let guncellenecekOgrenciSayisi = 0;
-
-      const transaction = db.transaction(() => {
-        // 1. Öğretmenleri senkronize et
-        const insertOgretmen = db.prepare(`
-          INSERT INTO ogretmenler (ad_soyad, sifre, rol, yetki_durumu)
-          VALUES (?, ?, 'ogretmen', 1)
-        `);
-        const checkOgretmen = db.prepare('SELECT id FROM ogretmenler WHERE ad_soyad = ?');
-        
-        // Şifre: Varsayılan olarak 123456
-        const defaultSifre = bcrypt.hashSync('123456', 10);
-
-        for (const ogretmenAdi of ogretmenler) {
-          if (!ogretmenAdi) continue;
-          const mevcut = checkOgretmen.get(ogretmenAdi);
-          if (!mevcut) {
-            insertOgretmen.run(ogretmenAdi, defaultSifre);
-            eklenecekOgretmenSayisi++;
-          }
-        }
-
-        // 2. Öğrencileri senkronize et
-        const checkOgrenci = db.prepare('SELECT id FROM ogrenciler WHERE ogrenci_no = ?');
-        const insertOgrenci = db.prepare(`
-          INSERT INTO ogrenciler (
-            ogrenci_no, ad_soyad, sube, dal, isletme_adi, ogretmen_id,
-            isyeri_telefonu, isyeri_adresi, ise_giris_tarihi, usta_ogretici_adi,
-            okul_devamsizligi, isletme_devamsizligi
-          )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `);
-        const updateOgrenci = db.prepare(`
-          UPDATE ogrenciler 
-          SET ad_soyad = ?, sube = ?, dal = ?, isletme_adi = ?, ogretmen_id = ?,
-              isyeri_telefonu = ?, isyeri_adresi = ?, ise_giris_tarihi = ?, usta_ogretici_adi = ?,
-              okul_devamsizligi = ?, isletme_devamsizligi = ?
-          WHERE ogrenci_no = ?
-        `);
-
-        for (const ogr of ogrenciler) {
-          let ogrt_id = 1; // Varsayılan (Yönetici veya ilk öğretmen)
-          if (ogr.ogretmen) {
-            const ogrt = checkOgretmen.get(ogr.ogretmen);
-            if (ogrt) ogrt_id = ogrt.id;
-          }
-
-          const parseDevamsizlik = (val) => {
-            if (!val) return 0;
-            const parsed = parseInt(val, 10);
-            return isNaN(parsed) ? 0 : parsed;
-          };
-
-          const o_devam = parseDevamsizlik(ogr.okul_devamsizligi);
-          const i_devam = parseDevamsizlik(ogr.isletme_devamsizligi);
-
-          const mevcutOgr = checkOgrenci.get(ogr.ogrenci_no);
-          if (mevcutOgr) {
-            updateOgrenci.run(
-              ogr.ad_soyad, ogr.sube, ogr.dal, ogr.isletme_adi, ogrt_id,
-              ogr.isyeri_telefonu, ogr.isyeri_adresi, ogr.ise_giris_tarihi, ogr.usta_ogretici_adi,
-              o_devam, i_devam,
-              ogr.ogrenci_no
-            );
-          } else {
-            insertOgrenci.run(
-              ogr.ogrenci_no, ogr.ad_soyad, ogr.sube, ogr.dal, ogr.isletme_adi, ogrt_id,
-              ogr.isyeri_telefonu, ogr.isyeri_adresi, ogr.ise_giris_tarihi, ogr.usta_ogretici_adi,
-              o_devam, i_devam
-            );
-          }
-          guncellenecekOgrenciSayisi++;
-        }
-      });
-
-      // İşlemi başlat
-      transaction();
-
-      res.json({ 
-        message: `Başarılı! ${eklenecekOgretmenSayisi} yeni öğretmen eklendi. ${guncellenecekOgrenciSayisi} öğrenci güncellendi. Yeni öğretmenlerin geçici şifresi: 123456`,
-      });
-
-    } catch (err) {
-      console.error('Veritabanı senkronizasyon hatası:', err);
-      res.status(500).json({ error: 'Veri işleme hatası', details: err.message });
+    if (parsedData.error) {
+      throw new Error(parsedData.error);
     }
-  });
+
+    const { ogretmenler, ogrenciler } = parsedData;
+    let eklenecekOgretmenSayisi = 0;
+    let guncellenecekOgrenciSayisi = 0;
+
+    const transaction = db.transaction(() => {
+      // 1. Öğretmenleri senkronize et
+      const insertOgretmen = db.prepare(`
+        INSERT INTO ogretmenler (ad_soyad, sifre, rol, yetki_durumu)
+        VALUES (?, ?, 'ogretmen', 1)
+      `);
+      const checkOgretmen = db.prepare('SELECT id FROM ogretmenler WHERE ad_soyad = ?');
+      
+      // Şifre: Varsayılan olarak 123456
+      const defaultSifre = bcrypt.hashSync('123456', 10);
+
+      for (const ogretmenAdi of ogretmenler) {
+        if (!ogretmenAdi) continue;
+        const mevcut = checkOgretmen.get(ogretmenAdi);
+        if (!mevcut) {
+          insertOgretmen.run(ogretmenAdi, defaultSifre);
+          eklenecekOgretmenSayisi++;
+        }
+      }
+
+      // 2. Öğrencileri senkronize et
+      const checkOgrenci = db.prepare('SELECT id FROM ogrenciler WHERE ogrenci_no = ?');
+      const insertOgrenci = db.prepare(`
+        INSERT INTO ogrenciler (
+          ogrenci_no, ad_soyad, sube, dal, isletme_adi, ogretmen_id,
+          isyeri_telefonu, isyeri_adresi, ise_giris_tarihi, usta_ogretici_adi,
+          okul_devamsizligi, isletme_devamsizligi
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      const updateOgrenci = db.prepare(`
+        UPDATE ogrenciler 
+        SET ad_soyad = ?, sube = ?, dal = ?, isletme_adi = ?, ogretmen_id = ?,
+            isyeri_telefonu = ?, isyeri_adresi = ?, ise_giris_tarihi = ?, usta_ogretici_adi = ?,
+            okul_devamsizligi = ?, isletme_devamsizligi = ?
+        WHERE ogrenci_no = ?
+      `);
+
+      for (const ogr of ogrenciler) {
+        let ogrt_id = 1; // Varsayılan (Yönetici veya ilk öğretmen)
+        if (ogr.ogretmen) {
+          const ogrt = checkOgretmen.get(ogr.ogretmen);
+          if (ogrt) ogrt_id = ogrt.id;
+        }
+
+        const parseDevamsizlik = (val) => {
+          if (!val) return 0;
+          const parsed = parseInt(val, 10);
+          return isNaN(parsed) ? 0 : parsed;
+        };
+
+        const o_devam = parseDevamsizlik(ogr.okul_devamsizligi);
+        const i_devam = parseDevamsizlik(ogr.isletme_devamsizligi);
+
+        const mevcutOgr = checkOgrenci.get(ogr.ogrenci_no);
+        if (mevcutOgr) {
+          updateOgrenci.run(
+            ogr.ad_soyad, ogr.sube, ogr.dal, ogr.isletme_adi, ogrt_id,
+            ogr.isyeri_telefonu, ogr.isyeri_adresi, ogr.ise_giris_tarihi, ogr.usta_ogretici_adi,
+            o_devam, i_devam,
+            ogr.ogrenci_no
+          );
+        } else {
+          insertOgrenci.run(
+            ogr.ogrenci_no, ogr.ad_soyad, ogr.sube, ogr.dal, ogr.isletme_adi, ogrt_id,
+            ogr.isyeri_telefonu, ogr.isyeri_adresi, ogr.ise_giris_tarihi, ogr.usta_ogretici_adi,
+            o_devam, i_devam
+          );
+        }
+        guncellenecekOgrenciSayisi++;
+      }
+    });
+
+    // İşlemi başlat
+    transaction();
+
+    res.json({ 
+      message: `Başarılı! ${eklenecekOgretmenSayisi} yeni öğretmen eklendi. ${guncellenecekOgrenciSayisi} öğrenci güncellendi. Yeni öğretmenlerin geçici şifresi: 123456`,
+    });
+
+  } catch (err) {
+    console.error('Veritabanı senkronizasyon hatası:', err);
+    res.status(500).json({ error: 'Veri işleme hatası', details: err.message });
+  }
+});
 });
 
 module.exports = router;
